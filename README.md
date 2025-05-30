@@ -178,5 +178,3 @@ struct tm* t = localtime(&now);
 * ESP8266 Arduino Core Time: [https://arduino-esp8266.readthedocs.io/en/latest/libraries.html#time](https://arduino-esp8266.readthedocs.io/en/latest/libraries.html#time)
 
 ---
-
-Let me know if you'd like this exported as a `.md` file or converted to a downloadable PDF.
