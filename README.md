@@ -1,154 +1,156 @@
-# U8g2\_for\_Adafruit\_GFX with Adafruit\_SSD1306 on ESP8266 (SPI) - Detailed Documentation
+
+# 🖥️ U8g2 Fonts + Adafruit SSD1306 on ESP8266 (SPI OLED Clock)
+
+> OLED Clock with UTF-8 Fonts + Heart Animation using U8g2 and Adafruit GFX on ESP8266
+
+![Platform](https://img.shields.io/badge/platform-ESP8266-blue.svg)
+![Display](https://img.shields.io/badge/display-SSD1306%20OLED-black)
+![SPI](https://img.shields.io/badge/connection-SPI-yellow)
+![License](https://img.shields.io/github/license/olikraus/U8g2)
+
+---
 
 ## 📦 Libraries Used
 
-### 1. `Adafruit_SSD1306.h`
+### 1. `Adafruit_SSD1306`
 
-#### Description:
+**Description:** OLED driver for SSD1306-based displays, supporting SPI and I2C.
 
-This library drives OLED displays based on the SSD1306 controller. It supports both I2C and SPI modes.
-
-#### Installation:
-
+**Installation:**
 ```
 Library Manager > Search "Adafruit SSD1306" > Install
 ```
 
-#### Constructor for SPI:
-
+**SPI Constructor:**
 ```cpp
 Adafruit_SSD1306 display(WIDTH, HEIGHT, MOSI, CLK, DC, RESET, CS);
 ```
 
-##### Parameters:
+**Parameters:**
+- `WIDTH`: OLED width (usually 128)
+- `HEIGHT`: OLED height (usually 64)
+- `MOSI`: Data pin (D7 / GPIO13)
+- `CLK`: Clock pin (D5 / GPIO14)
+- `DC`: Data/Command pin
+- `RESET`: Reset pin
+- `CS`: Chip Select pin
 
-* `WIDTH`: Width of the screen (usually 128)
-* `HEIGHT`: Height of the screen (usually 64)
-* `MOSI`: Data pin (D7 / GPIO13)
-* `CLK`: Clock pin (D5 / GPIO14)
-* `DC`: Data/Command pin
-* `RESET`: Reset pin
-* `CS`: Chip Select pin
-
-#### Important Methods:
-
-* `begin(VCC_SOURCE)`: Initializes the display
-* `clearDisplay()`: Clears the internal buffer
-* `display()`: Writes the buffer to the screen
-* `drawPixel(x, y, color)`: Draws a pixel
+**Key Methods:**
+```cpp
+display.begin(VCC_SOURCE);
+display.clearDisplay();
+display.display();
+display.drawPixel(x, y, color);
+```
 
 ---
 
-### 2. `U8g2_for_Adafruit_GFX.h`
+### 2. `U8g2_for_Adafruit_GFX`
 
-#### Description:
+**Description:** Enables UTF-8 fonts from U8g2 with Adafruit GFX-compatible displays.
 
-This library bridges U8g2 fonts (extensive UTF-8 and icon fonts) with any Adafruit GFX-compatible display like SSD1306.
-
-#### Installation:
-
+**Installation:**
 ```
 Library Manager > Search "U8g2 for Adafruit GFX" > Install
 ```
 
-#### Initialization:
-
+**Initialization:**
 ```cpp
 U8G2_FOR_ADAFRUIT_GFX u8g2;
 u8g2.begin(display);
 ```
 
-#### Key Methods:
+**Key Methods:**
+```cpp
+u8g2.setFont(u8g2_font_*);
+u8g2.setCursor(x, y);
+u8g2.print("Text");
+u8g2.getUTF8Width("Text");
+u8g2.setFontMode(1); // Transparent background
+u8g2.setForegroundColor(WHITE);
+```
 
-* `setFont(u8g2_font_*)`: Set current font
-* `setCursor(x, y)`: Set cursor for text
-* `print(text)`: Print UTF-8 text
-* `getUTF8Width(text)`: Get width of text (for centering)
-* `setFontMode(1)`: Enable transparent background
-* `setForegroundColor(WHITE)`: Set text color (optional, needed for OLED)
+**Font Tips:**
+- `*_t`: Unicode support
+- `*_tf`: ASCII-only, fast
+- `*_2x_t`: Icons (use `"B"` for heart)
 
-#### Font Naming Convention:
+**Popular Fonts:**
+| Font Name                          | Description                      |
+| ---------------------------------- | -------------------------------- |
+| `u8g2_font_logisoso20_tf`          | Modern digital numbers           |
+| `u8g2_font_helvB08_tf`             | Helvetica Bold, size 8           |
+| `u8g2_font_helvB12_tf`             | Helvetica Bold, size 12          |
+| `u8g2_font_open_iconic_human_2x_t` | Icons: heart (`"B"`), user, etc. |
 
-* `*_t`: Unicode version
-* `*_tf`: ASCII-only fast fonts
-* `*_2x_t`: Large icon fonts
-
-#### Popular Fonts:
-
-| Font Name                          | Description                            |
-| ---------------------------------- | -------------------------------------- |
-| `u8g2_font_logisoso20_tf`          | Large digital/modern numbers           |
-| `u8g2_font_helvB08_tf`             | Helvetica Bold, size 8                 |
-| `u8g2_font_helvB12_tf`             | Helvetica Bold, size 12                |
-| `u8g2_font_open_iconic_human_2x_t` | Heart, user, icons (use "B" for heart) |
-
-📌 Font list preview: [https://github.com/olikraus/u8g2/wiki/fntlistall](https://github.com/olikraus/u8g2/wiki/fntlistall)
+🔗 Font list: https://github.com/olikraus/u8g2/wiki/fntlistall
 
 ---
 
-### 3. `ESP8266WiFi.h`
+### 3. `ESP8266WiFi`
 
-#### Description:
+**Description:** Manages WiFi for ESP8266 boards.
 
-Handles WiFi connection for ESP8266.
+**Key Methods:**
+```cpp
+WiFi.begin(ssid, password);
+WiFi.status();
+```
 
-#### Key Methods:
-
-* `WiFi.begin(ssid, password)`: Starts WiFi connection
-* `WiFi.status()`: Get current status
-* `WL_CONNECTED`: Constant used to check if connected
+**Status Check:**
+```cpp
+if (WiFi.status() == WL_CONNECTED) { ... }
+```
 
 ---
 
 ### 4. `time.h`
 
-#### Description:
+**Description:** Fetches time from NTP servers using ESP8266 built-in support.
 
-Fetches time from NTP servers using ESP8266’s built-in time support.
-
-#### Configuration:
-
+**Configuration:**
 ```cpp
 configTime(GMT_OFFSET_SEC, DST_OFFSET_SEC, "pool.ntp.org", "time.nist.gov");
 ```
 
-* `GMT_OFFSET_SEC`: e.g., 19800 for GMT+5:30 (India)
-* `DST_OFFSET_SEC`: 0 or 3600 depending on daylight saving
-
-#### Time Extraction:
-
+**Extracting Time:**
 ```cpp
 time_t now = time(nullptr);
 struct tm* t = localtime(&now);
-```
 
-* `t->tm_hour`, `t->tm_min`, `t->tm_sec`: Time parts
-* `t->tm_wday`: Day of the week (0 = Sunday)
+// Example usage:
+t->tm_hour;
+t->tm_min;
+t->tm_sec;
+t->tm_wday; // 0 = Sunday
+```
 
 ---
 
-## 🧪 Use Case Example: OLED Clock with Pulse Heart
+## 🧪 Use Case: OLED Clock with Pulse Heart
 
-* Displays current time from NTP (12h format)
-* Weekday in small font on top
-* Time in large centered font
-* "am/pm" label in small font
-* Animated heart icon pulsing
+**Features:**
+- Fetches current time via NTP
+- Weekday on top (small font)
+- Time in center (large font)
+- "am/pm" in small font
+- Animated pulsing heart
 
-### Fonts Used:
+**Fonts Used:**
+| Section | Font Name                          |
+|--------|-------------------------------------|
+| Weekday | `u8g2_font_helvB08_tf`             |
+| Time    | `u8g2_font_logisoso20_tf`          |
+| AM/PM   | `u8g2_font_helvB08_tf`             |
+| Label   | `u8g2_font_helvB12_tf`             |
+| Heart   | `u8g2_font_open_iconic_human_2x_t` (char `"B"`) |
 
-| Purpose | Font                                           |
-| ------- | ---------------------------------------------- |
-| Weekday | `u8g2_font_helvB08_tf`                         |
-| Time    | `u8g2_font_logisoso20_tf`                      |
-| am/pm   | `u8g2_font_helvB08_tf`                         |
-| Name    | `u8g2_font_helvB12_tf`                         |
-| Heart   | `u8g2_font_open_iconic_human_2x_t` (use `"B"`) |
+---
 
-### SPI Pin Mapping for NodeMCU (ESP8266):
+## 📌 SPI Pin Mapping for NodeMCU (ESP8266)
 
 | Function | GPIO | Label |
-| -------- | ---- | ----- |
+|----------|------|-------|
 | MOSI     | 13   | D7    |
 | CLK      | 14   | D5    |
 | DC       | 12   | D6    |
@@ -157,24 +159,28 @@ struct tm* t = localtime(&now);
 
 ---
 
-## ⚠️ Tips & Troubleshooting
+## ⚠️ Troubleshooting Tips
 
-* If display shows nothing, check:
-
-  * SPI wiring
-  * Display voltage (3.3V vs 5V)
-  * Initialization success (`display.begin()` must return true)
-* Use `display.clearDisplay()` before every draw cycle.
-* Always call `display.display()` after drawing.
-* Use `getUTF8Width()` to center text.
+- Display not working?
+  - Check **SPI wiring**
+  - Verify **3.3V/5V compatibility**
+  - Ensure `display.begin()` returns `true`
+- Always:
+  - Call `display.clearDisplay()` before drawing
+  - Call `display.display()` after drawing
+- Use `u8g2.getUTF8Width()` to center text precisely
 
 ---
 
 ## 📎 Useful Links
 
-* U8g2 Font List: [https://github.com/olikraus/u8g2/wiki/fntlistall](https://github.com/olikraus/u8g2/wiki/fntlistall)
-* Adafruit SSD1306 GitHub: [https://github.com/adafruit/Adafruit\_SSD1306](https://github.com/adafruit/Adafruit_SSD1306)
-* U8g2 for Adafruit GFX GitHub: [https://github.com/olikraus/U8g2\_for\_Adafruit\_GFX](https://github.com/olikraus/U8g2_for_Adafruit_GFX)
-* ESP8266 Arduino Core Time: [https://arduino-esp8266.readthedocs.io/en/latest/libraries.html#time](https://arduino-esp8266.readthedocs.io/en/latest/libraries.html#time)
+- 🔠 U8g2 Font List: https://github.com/olikraus/u8g2/wiki/fntlistall
+- 📘 Adafruit SSD1306 GitHub: https://github.com/adafruit/Adafruit_SSD1306
+- 🧩 U8g2 for Adafruit GFX: https://github.com/olikraus/U8g2_for_Adafruit_GFX
+- ⏰ ESP8266 Time Docs: https://arduino-esp8266.readthedocs.io/en/latest/libraries.html#time
 
 ---
+
+## 📁 License
+
+This project uses open source libraries under their respective licenses.
