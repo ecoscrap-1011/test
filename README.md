@@ -1,186 +1,218 @@
 
-# 🖥️ U8g2 Fonts + Adafruit SSD1306 on ESP8266 (SPI OLED Clock)
+# 🌤️ ESP8266 OLED Weather & Clock Display
 
-> OLED Clock with UTF-8 Fonts + Heart Animation using U8g2 and Adafruit GFX on ESP8266
+A stylish microproject using **NodeMCU ESP8266**, **128x64 SPI OLED**, and **OpenWeatherMap API**. Displays live **temperature**, **weather icons**, **real-time clock**, and a cute **animated heart pulse**.
 
-![Platform](https://img.shields.io/badge/platform-ESP8266-blue.svg)
-![Display](https://img.shields.io/badge/display-SSD1306%20OLED-black)
-![SPI](https://img.shields.io/badge/connection-SPI-yellow)
-![License](https://img.shields.io/github/license/olikraus/U8g2)
+![ESP8266 OLED Weather Display](https://your-image-link-here.png) <!-- optional screenshot -->
 
 ---
 
-## 📦 Libraries Used
+## 📦 Features
 
-### 1. `Adafruit_SSD1306`
+- ✅ Real-time weather via OpenWeatherMap API
+- 🕒 NTP-synced digital clock
+- 🌡️ Temperature + Weather icons
+- 💓 Animated heart pulse effect
+- 📶 Auto WiFi reconnect
+- 🔄 API key rotation for rate-limit safety
 
-**Description:** OLED driver for SSD1306-based displays, supporting SPI and I2C.
+---
 
-**Installation:**
-```
-Library Manager > Search "Adafruit SSD1306" > Install
-```
+## 🛠️ Hardware Requirements
 
-**SPI Constructor:**
+| Component       | Description              |
+|----------------|--------------------------|
+| ESP8266 Board  | NodeMCU, Wemos, etc.     |
+| OLED Display   | 128x64 SPI SSD1306       |
+| Power Supply   | 5V Micro USB / 3.3V      |
+
+---
+
+## 📚 Libraries Used
+
 ```cpp
-Adafruit_SSD1306 display(WIDTH, HEIGHT, MOSI, CLK, DC, RESET, CS);
+#include <ESP8266WiFi.h>
+#include <time.h>
+#include <Adafruit_SSD1306.h>
+#include <U8g2_for_Adafruit_GFX.h>
+#include <ESP8266HTTPClient.h>
+#include <ArduinoJson.h>
+#include <math.h>
 ```
 
-**Parameters:**
-- `WIDTH`: OLED width (usually 128)
-- `HEIGHT`: OLED height (usually 64)
-- `MOSI`: Data pin (D7 / GPIO13)
-- `CLK`: Clock pin (D5 / GPIO14)
-- `DC`: Data/Command pin
-- `RESET`: Reset pin
-- `CS`: Chip Select pin
+Install these via **Library Manager** or PlatformIO.
 
-**Key Methods:**
+---
+
+## 📡 WiFi & API Setup
+
 ```cpp
-display.begin(VCC_SOURCE);
-display.clearDisplay();
-display.display();
-display.drawPixel(x, y, color);
+const char* ssid = "your_wifi_name";
+const char* password = "your_wifi_password";
+
+const char* city = "Kochi";
+const char* countryCode = "IN";
+
+const char* apiKeys[] = {
+  "API_KEY_1", "API_KEY_2", "API_KEY_3" // use multiple for load distribution
+};
 ```
+
+- **API Source**: [OpenWeatherMap](https://openweathermap.org/api)
+- Set units to metric (°C)
 
 ---
 
-### 2. `U8g2_for_Adafruit_GFX`
+## ⏰ Time Synchronization (NTP)
 
-**Description:** Enables UTF-8 fonts from U8g2 with Adafruit GFX-compatible displays.
-
-**Installation:**
-```
-Library Manager > Search "U8g2 for Adafruit GFX" > Install
-```
-
-**Initialization:**
 ```cpp
-U8G2_FOR_ADAFRUIT_GFX u8g2;
-u8g2.begin(display);
+configTime(19800, 0, "pool.ntp.org", "time.nist.gov");
 ```
 
-**Key Methods:**
+- IST (GMT +5:30) used
+- Retries for up to 10 seconds if unsynced
+
+---
+
+## 🖥️ OLED SPI Pinout (NodeMCU)
+
+| Signal  | OLED Pin | ESP8266 Pin |
+|---------|----------|-------------|
+| MOSI    | D1       | GPIO13      |
+| CLK     | D0       | GPIO14      |
+| DC      | D2       | GPIO12      |
+| RESET   | D3       | GPIO5       |
+| CS      | D8       | GPIO15      |
+
+> 📐 Display Resolution: `128x64`
+
+---
+
+## 🎨 Fonts & Icons
+
+| Element         | Font                            |
+|----------------|----------------------------------|
+| Regular Text    | `u8g2_font_helvR08_tf`          |
+| Time Display    | `u8g2_font_logisoso20_tf`       |
+| Weather Icons   | `u8g2_font_open_iconic_weather_1x_t` |
+| Heart Icon      | `u8g2_font_open_iconic_human_2x_t`   |
+
+---
+
+<details>
+<summary>💓 Heart Animation Logic</summary>
+
 ```cpp
-u8g2.setFont(u8g2_font_*);
-u8g2.setCursor(x, y);
-u8g2.print("Text");
-u8g2.getUTF8Width("Text");
-u8g2.setFontMode(1); // Transparent background
-u8g2.setForegroundColor(WHITE);
+float pulseAngle = 0;
+const float PULSE_SPEED = 0.15;
+const int PULSE_AMPLITUDE = 2;
+
+int offset = (int)(sin(pulseAngle) * PULSE_AMPLITUDE);
+pulseAngle += PULSE_SPEED;
 ```
 
-**Font Tips:**
-- `*_t`: Unicode support
-- `*_tf`: ASCII-only, fast
-- `*_2x_t`: Icons (use `"B"` for heart)
-
-**Popular Fonts:**
-| Font Name                          | Description                      |
-| ---------------------------------- | -------------------------------- |
-| `u8g2_font_logisoso20_tf`          | Modern digital numbers           |
-| `u8g2_font_helvB08_tf`             | Helvetica Bold, size 8           |
-| `u8g2_font_helvB12_tf`             | Helvetica Bold, size 12          |
-| `u8g2_font_open_iconic_human_2x_t` | Icons: heart (`"B"`), user, etc. |
-
-🔗 Font list: https://github.com/olikraus/u8g2/wiki/fntlistall
+- Smooth up/down bounce
+- Drawn alongside "makrii" branding
+</details>
 
 ---
 
-### 3. `ESP8266WiFi`
+<details>
+<summary>🌥️ Weather Fetching Code</summary>
 
-**Description:** Manages WiFi for ESP8266 boards.
-
-**Key Methods:**
 ```cpp
-WiFi.begin(ssid, password);
-WiFi.status();
+void fetchWeather() {
+  HTTPClient http;
+  String url = String("http://api.openweathermap.org/data/2.5/weather?q=") +
+               city + "," + countryCode + "&appid=" + apiKeys[apiKeyIndex] + "&units=metric";
+
+  http.begin(url);
+  int httpCode = http.GET();
+
+  if (httpCode == HTTP_CODE_OK) {
+    String payload = http.getString();
+    DynamicJsonDocument doc(1024);
+    deserializeJson(doc, payload);
+
+    weatherMain = doc["weather"][0]["main"].as<String>();
+    temperature = doc["main"]["temp"].as<float>();
+  }
+
+  apiKeyIndex = (apiKeyIndex + 1) % NUM_API_KEYS;
+}
 ```
 
-**Status Check:**
+- Rotates API keys
+- Parses JSON via `ArduinoJson`
+</details>
+
+---
+
+## 🔁 Main Loop Breakdown
+
 ```cpp
-if (WiFi.status() == WL_CONNECTED) { ... }
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    connectToWiFi();  // Handles reconnect
+  }
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    fetchWeather();
+  }
+
+  displayTimeWeather();  // Always running
+}
 ```
 
 ---
 
-### 4. `time.h`
+## 📊 OLED Display Layout
 
-**Description:** Fetches time from NTP servers using ESP8266 built-in support.
-
-**Configuration:**
-```cpp
-configTime(GMT_OFFSET_SEC, DST_OFFSET_SEC, "pool.ntp.org", "time.nist.gov");
-```
-
-**Extracting Time:**
-```cpp
-time_t now = time(nullptr);
-struct tm* t = localtime(&now);
-
-// Example usage:
-t->tm_hour;
-t->tm_min;
-t->tm_sec;
-t->tm_wday; // 0 = Sunday
+```text
+ ┌──────────────────────────────┐
+ │ Mon  | ☁️ 29.3°C | Clouds    │
+ │         10:25:42 AM         │
+ │     ❤️ makrii (pulse)       │
+ └──────────────────────────────┘
 ```
 
 ---
 
-## 🧪 Use Case: OLED Clock with Pulse Heart
+## ⚠️ Error Handling
 
-**Features:**
-- Fetches current time via NTP
-- Weekday on top (small font)
-- Time in center (large font)
-- "am/pm" in small font
-- Animated pulsing heart
-
-**Fonts Used:**
-| Section | Font Name                          |
-|--------|-------------------------------------|
-| Weekday | `u8g2_font_helvB08_tf`             |
-| Time    | `u8g2_font_logisoso20_tf`          |
-| AM/PM   | `u8g2_font_helvB08_tf`             |
-| Label   | `u8g2_font_helvB12_tf`             |
-| Heart   | `u8g2_font_open_iconic_human_2x_t` (char `"B"`) |
+- WiFi reconnect loop
+- NTP sync timeout message
+- Skips weather update if offline
+- Continues display even if fetch fails
 
 ---
 
-## 📌 SPI Pin Mapping for NodeMCU (ESP8266)
+## 🧠 TODO / Enhancements
 
-| Function | GPIO | Label |
-|----------|------|-------|
-| MOSI     | 13   | D7    |
-| CLK      | 14   | D5    |
-| DC       | 12   | D6    |
-| RESET    | 5    | D1    |
-| CS       | 15   | D8    |
+- [ ] 12/24 hour toggle
+- [ ] OLED brightness dimming at night
+- [ ] Add humidity and wind info
+- [ ] Touch input / button control
 
 ---
 
-## ⚠️ Troubleshooting Tips
+## 📝 License & Attribution
 
-- Display not working?
-  - Check **SPI wiring**
-  - Verify **3.3V/5V compatibility**
-  - Ensure `display.begin()` returns `true`
-- Always:
-  - Call `display.clearDisplay()` before drawing
-  - Call `display.display()` after drawing
-- Use `u8g2.getUTF8Width()` to center text precisely
+MIT License  
+Developed by [makrii]  
+Fonts from [U8g2 Iconic Fonts](https://github.com/olikraus/u8g2/wiki/fntgrpiconic)
 
 ---
 
-## 📎 Useful Links
+## 📁 File Info
 
-- 🔠 U8g2 Font List: https://github.com/olikraus/u8g2/wiki/fntlistall
-- 📘 Adafruit SSD1306 GitHub: https://github.com/adafruit/Adafruit_SSD1306
-- 🧩 U8g2 for Adafruit GFX: https://github.com/olikraus/U8g2_for_Adafruit_GFX
-- ⏰ ESP8266 Time Docs: https://arduino-esp8266.readthedocs.io/en/latest/libraries.html#time
+- **Platform**: ESP8266 (NodeMCU)
+- **Filename**: `weather_clock_esp8266.ino`
+- **Display**: SSD1306 OLED 128x64 (SPI)
+- **Tested On**: Arduino IDE v2.2
 
 ---
 
-## 📁 License
-
-This project uses open source libraries under their respective licenses.
+⭐ *If you found this helpful, give the project a star!*
